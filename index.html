@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
+  <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
+  <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
+  <link rel="stylesheet" href="assets/steam_portal.css">
+</head>
+<body>
+  <div class="sale-sync-overlay" id="saleSyncOverlay" hidden aria-live="polite">
+    <div class="sale-sync-overlay-inner">
+      <div class="sale-sync-head"><span id="saleSyncLabel">正在讀取特價資訊中</span><strong id="saleSyncProgressText">0 / 0</strong></div>
+      <div class="sale-sync-progress"><span id="saleSyncProgressFill"></span></div>
+    </div>
+  </div>
+  <div class="portal-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#" id="brandLink" aria-label="回到 Steam 玩家心得搜尋入口">
+          <strong>STEAM 玩家心得庫</strong>
+          <span>Search · Filter · Read</span>
+        </a>
+        <div class="search-area">
+          <form class="search-box" id="searchForm" role="search">
+            <input id="searchInput" type="search" autocomplete="off" placeholder="搜尋遊戲名稱或 App ID" aria-label="搜尋遊戲">
+            <button type="submit" aria-label="開始搜尋">⌕</button>
+          </form>
+        </div>
+        <div class="top-actions">
+          <div class="sync-control"><span class="sync-age" id="saleSyncAge">尚未同步</span><button type="button" class="button sync-button" id="manualSaleSyncButton" title="立即同步全部特價資料">手動同步</button></div>
+          <button type="button" class="button name-toggle" id="nameToggleButton" aria-label="切換原名與繁體中文名" aria-pressed="false" title="切換顯示名稱">繁中名</button>
+          <button type="button" class="button mobile-filter-button" id="mobileFilterButton">☰ 篩選</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="filters-backdrop" id="filtersBackdrop" hidden></div>
+    <main id="browseView" class="workspace">
+      <aside class="filters" id="filtersPanel" aria-label="搜尋篩選">
+        <div class="filters-head">
+          <h2>搜尋篩選</h2>
+          <button type="button" class="text-button" id="clearFiltersButton">清除全部</button>
+        </div>
+        <div id="storageNote" class="storage-note" hidden></div>
+        <section class="filter-group filter-inline-group">
+          <div class="filter-check-row">
+            <label class="favorite-filter demo-filter">
+              <input id="demoFilter" type="checkbox" aria-label="有試玩版">
+              <span>有試玩版</span>
+            </label>
+          </div>
+          <label class="river-read-inline"><span>閱讀</span><select class="select-input river-read-filter" id="riverReadFilter" aria-label="河道閱讀狀態"><option value="all">全部顯示</option><option value="unread">只看未讀</option><option value="read">只看已讀</option></select></label>
+        </section>
+        <section class="filter-group">
+          <div class="filter-title">價格</div>
+          <div class="choice-list" id="priceChoices">
+            <button type="button" class="choice active" data-price="all">全部</button>
+            <button type="button" class="choice" data-price="free">免費</button>
+            <button type="button" class="choice" data-price="paid">付費</button>
+          </div>
+          <div class="range-stack" style="margin-top:10px">
+            <div class="range-label"><span>最高價格</span><strong id="maxPriceValue">不限</strong></div>
+            <input class="range-input" id="maxPriceInput" type="range" min="0" max="10" step="1" value="0" aria-label="最高價格">
+          </div>
+          <label class="sale-filter-row"><input id="saleOnlyFilter" type="checkbox" aria-label="只看特價"><span>只看特價</span></label>
+          <div class="range-stack">
+            <div class="range-label"><span>最低折扣</span><strong id="saleDiscountValue">不限</strong></div>
+            <input class="range-input" id="minDiscountInput" type="range" min="0" max="6" step="1" value="0" aria-label="最低折扣">
+          </div>
+        </section>
+        <section class="filter-group">
+          <div class="filter-title">好評比例</div>
+          <div class="range-stack">
+            <div class="range-label"><span>最低好評</span><strong id="ratingValue">不限</strong></div>
+            <input class="range-input" id="ratingFilter" type="range" min="0" max="4" step="1" value="0" aria-label="最低好評比例">
+          </div>
+        </section>
+        <section class="filter-group">
+          <div class="filter-title">發行年份</div>
+          <div class="field-row">
+            <input class="number-input" id="minYearInput" type="number" min="1970" max="2100" placeholder="起始年" aria-label="最早發行年份">
+            <input class="number-input" id="maxYearInput" type="number" min="1970" max="2100" placeholder="結束年" aria-label="最晚發行年份">
+          </div>
+        </section>
+        <section class="filter-group">
+          <div class="filter-title">中文支援</div>
+          <select class="select-input" id="languageFilter" aria-label="中文支援">
+            <option value="all">不限</option>
+            <option value="traditional">繁體中文</option>
+            <option value="chinese">中文</option>
+            <option value="none">無中文</option>
+          </select>
+        </section>
+        <section class="filter-group">
+          <div class="filter-title">標籤 <small>任一符合</small></div>
+          <input class="filter-search" id="topicSearchInput" type="search" placeholder="尋找標籤" aria-label="尋找標籤">
+          <div class="checkbox-list" id="topicOptions" style="margin-top:8px"></div>
+        </section>
+        </aside>
+
+      <section class="results" aria-live="polite">
+        <div class="results-head">
+          <div class="eyebrow">Steam-inspired discovery</div>
+          <div class="results-title-row">
+            <h1>找到下一款想讀、想玩的遊戲</h1>
+            <div class="results-head-actions">
+              <div class="import-actions" aria-label="匯入 Steam 清單">
+                <span class="import-status" id="importStatus" role="status" aria-live="polite"></span>
+                <div class="import-button-row">
+                  <button type="button" class="button import-button" id="importWishlistButton" title="開啟已登入的 Steam 願望清單頁並匯入">匯入願望清單</button>
+                  <button type="button" class="button import-button" id="importOwnedButton" title="開啟已登入的 Steam 遊戲清單頁並匯入">匯入已擁有遊戲</button>
+                </div>
+              </div>
+              <div class="backup-actions" aria-label="手動匯入匯出">
+                <span class="backup-status" id="backupStatus" role="status" aria-live="polite"></span>
+                <div class="import-button-row">
+                  <button type="button" class="button import-button" id="exportStateButton" title="下載收藏、河道與閱讀狀態">匯出同步資料</button>
+                  <button type="button" class="button import-button" id="importStateButton" title="從 JSON 檔案合併收藏、河道與閱讀狀態">匯入同步資料</button>
+                  <input id="importStateFile" type="file" accept="application/json,.json" hidden>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p>用標籤、類型、評價與中文支援縮小範圍；滑動頁面閱讀AI仿寫玩家心得。</p>
+        </div>
+        <section class="river-panel" aria-label="閱讀河道">
+          <div class="river-head">
+            <div><div class="eyebrow">Reading Rivers</div><h2>我的河道</h2><p class="river-hint">打開並切換河道</p></div>
+            <div class="river-head-actions"><p id="riverCount">0 / 0</p><button type="button" class="river-toggle" id="riverToggle" aria-expanded="false">展開</button></div>
+          </div>
+          <div class="river-shortcuts" id="riverShortcuts"></div>
+          <div class="river-list" id="riverList"></div>
+        </section>
+        <div class="toolbar">
+          <div class="result-count" id="resultCount">載入中…</div>
+          <div class="toolbar-actions">
+            <label class="sort-control">排序
+              <select class="select-input" id="sortSelect" aria-label="結果排序">
+                <option value="river">探索河道順序</option>
+                <option value="relevance">相關性</option>
+                <option value="updated">最新收錄</option>
+                <option value="release">發行日期</option>
+                <option value="name">名稱 A-Z</option>
+                <option value="price_asc">價格由低至高</option>
+                <option value="price_desc">價格由高至低</option>
+                <option value="review">好評比例</option>
+                <option value="review_count">評論數</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="active-filters" id="activeFilters"></div>
+        <div class="game-list" id="gameList"></div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </main>
+
+    <section id="detailView" class="detail-view" hidden></section>
+  </div>
+
+  <div id="portalToast" class="portal-toast" role="status" aria-live="polite"></div>
+  <script id="gameData" type="application/json"></script>
+  <script>
+  (function () {
+    "use strict";
+    var dataFiles = ["data/games-0001.json","data/games-0002.json","data/games-0003.json","data/games-0004.json","data/games-0005.json","data/games-0006.json","data/games-0007.json","data/games-0008.json","data/games-0009.json","data/games-0010.json","data/games-0011.json","data/games-0012.json","data/games-0013.json"];
+    function showLoadError(error) {
+      console.error(error);
+      var panel = document.createElement("div");
+      panel.style.cssText = "margin:24px auto;max-width:720px;padding:18px;color:#fff;background:#6b2830;border:1px solid #ff7b7b;border-radius:8px;font:16px/1.6 sans-serif";
+      panel.textContent = "GitHub Pages 遊戲資料載入失敗，請重新整理或稍後再試。";
+      document.body.appendChild(panel);
+    }
+    Promise.all(dataFiles.map(function (file) {
+      return fetch(file, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
+        if (!response.ok) throw new Error(file + " HTTP " + response.status);
+        return response.json();
+      });
+    })).then(function (chunks) {
+      var items = [];
+      chunks.forEach(function (chunk) {
+        if (!Array.isArray(chunk)) throw new Error("遊戲資料分片格式錯誤");
+        items = items.concat(chunk);
+      });
+      if (!items.length) throw new Error("遊戲資料分片沒有內容");
+      window.__STEAM_PORTAL_DATA__ = { version: 2, items: items };
+      var portalScript = document.createElement("script");
+      portalScript.src = "assets/steam_portal.js";
+      portalScript.onerror = showLoadError;
+      document.body.appendChild(portalScript);
+    }).catch(showLoadError);
+  }());
+  </script>
+</body>
+</html>

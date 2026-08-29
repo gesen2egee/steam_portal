@@ -1,0 +1,53 @@
+name: 部署 Steam GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "data/games-*.json"
+      - "data/price.json"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下載專案
+        uses: actions/checkout@v4
+
+      - name: 設定 GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 準備網站檔案
+        shell: bash
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          cp -R assets _site/assets
+          cp -R data _site/data
+          touch _site/.nojekyll
+
+      - name: 上傳 Pages 內容
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

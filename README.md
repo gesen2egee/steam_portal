@@ -1,4 +1,4 @@
-# Steam 玩家心得庫｜單檔網頁使用說明
+# Steam 玩家心得庫｜GitHub Pages 與單檔網頁使用說明
 
 這是一個可以直接用瀏覽器開啟的 Steam 遊戲搜尋與閱讀網頁。
 
@@ -9,7 +9,7 @@
 - 收藏遊戲，並記錄已讀進度
 - 使用探索河道、收藏、願望清單與已擁有遊戲河道
 - 閱讀玩家心得、三大核心要點與遊戲截圖
-- 選配安裝油猴腳本，同步 Steam 特價及匯入 Steam 清單
+- GitHub Pages 版可直接讀取中央價格；選配安裝油猴腳本可使用 Steam 即時備援及清單匯入
 
 單檔網頁不需要安裝程式，也不需要啟動本機伺服器（server）。
 
@@ -18,25 +18,37 @@
 - **AI 模仿玩家心得寫法**：將 Steam 玩家心得中的玩法感受、優點與注意事項，整理成容易快速閱讀的心得與三大核心要點。這些內容是 AI 生成的整理，不是 Steam 官方立場，也不是玩家原文逐字轉載；重要資訊請回 Steam 原頁確認。
 - **涵蓋接近所有極度好評遊戲**：資料庫以 Steam 遊戲資料建立，收錄範圍涵蓋接近所有獲得「極度好評」評價的遊戲；實際內容會受資料更新時間與可取得資料影響。
 
+## GitHub Pages 網頁版
+
+GitHub Pages 的入口是 `index.html`。它會載入 `assets/` 的樣式與程式，再從 `data/games-*.json` 載入分片遊戲資料；`data/price.json` 則是中央特價快照。這些資料都放在子資料夾，方便查找與更新。
+
+GitHub Pages 版不使用 100MB 單檔，也不需要油猴就能搜尋、閱讀、收藏及讀取中央價格。只有中央價格無法使用時，才需要油猴作為 Steam 即時備援；願望清單與已擁有遊戲匯入也仍需要油猴。
+
 ---
 
 ## 畫面預覽
 
-![遊戲詳情頁](1.png)
+![遊戲詳情頁](assets/screenshots/1.png)
 
-![玩家心得](2.png)
+![玩家心得](assets/screenshots/2.png)
 
-![搜尋與篩選](3.png)
+![搜尋與篩選](assets/screenshots/3.png)
 
 ## 你需要的檔案
 
-如果只想搜尋與閱讀，只需要：
+如果使用 GitHub Pages，只需要開啟：
+
+```text
+index.html
+```
+
+如果要直接開啟單檔網頁，只需要：
 
 ```text
 steam_portal.html
 ```
 
-如果還想同步特價或匯入 Steam 清單，另外準備：
+如果還想使用 Steam 即時備援或匯入 Steam 清單，另外準備：
 
 ```text
 steam_portal.user.js
@@ -46,13 +58,13 @@ steam_portal.user.js
 
 單檔網頁每次開啟時會直接從 GitHub 下載中央 `price.json`，不會把每位訪客的瀏覽器當成價格伺服器。中央快照在 12 小時內時，頁面不會向 Steam 發出價格請求。
 
-只有中央檔案無法下載、格式錯誤或超過 12 小時，才會在已安裝油猴腳本的情況下，改由油猴向 Steam 讀取價格。上方的「手動同步」按鈕仍可讓使用者明確要求立即向 Steam 讀取。
+只有中央檔案無法下載、格式錯誤或超過 12 小時，才會在已安裝油猴腳本的情況下，改由油猴向 Steam 讀取價格。上方的「手動同步」按鈕也會先重新下載中央檔案；只有中央檔案不能使用時，才會改向 Steam 讀取。
 
 `data/price.json` 是 GitHub Actions 使用的中央快照；單檔 HTML 不依賴旁邊的 JSON，所以把 HTML 單獨複製出去仍會使用 GitHub 上的最新快照。
 
 GitHub Actions 預設在台灣時間每日 `02:10、06:10、10:10、14:10、18:10、22:10` 更新一次。排程若遇到 GitHub 負載，實際執行時間可能稍有延遲；也可以在 Actions 頁面手動執行。
 
-建議把兩個檔案放在同一個資料夾：
+單檔版建議把兩個檔案放在同一個資料夾：
 
 ```text
 Steam玩家心得庫/
@@ -62,7 +74,9 @@ Steam玩家心得庫/
 
 ### 從 GitHub 取得
 
-`steam_portal.html` 約 104 MiB，超過 GitHub 一般 Git 檔案的 100 MiB 限制，因此本 repo 使用 Git LFS 保存單檔網頁。建議先安裝 [Git LFS](https://git-lfs.com/)，再執行：
+`steam_portal.html` 約 104 MiB，超過 GitHub 一般 Git 檔案的 100 MiB 限制，因此本 repo 使用 Git LFS 保存單檔下載版。GitHub Pages 不會部署這個 LFS 單檔，而是部署 `index.html`、`assets/` 與 `data/games-*.json` 分割版。
+
+要下載完整單檔版，建議先安裝 [Git LFS](https://git-lfs.com/)，再執行：
 
 ```bash
 git lfs install
@@ -73,7 +87,7 @@ git clone https://github.com/gesen2egee/steam_portal.git
 
 ---
 
-## 一、直接開啟網頁
+## 一、直接開啟單檔網頁
 
 1. 用瀏覽器開啟 `steam_portal.html`。
 2. 可以直接雙擊檔案，不需要安裝網站伺服器。
@@ -86,13 +100,13 @@ git clone https://github.com/gesen2egee/steam_portal.git
 
 ---
 
-## 二、安裝油猴腳本（選配）
+## 二、GitHub Pages 與油猴腳本
 
-如果你只想搜尋、閱讀、收藏，不需要油猴。
+使用 GitHub Pages 搜尋、閱讀、收藏及讀取中央 `price.json`，不需要油猴。
 
-如果你想要以下功能，才需要安裝：
+如果你想要以下功能，才需要安裝油猴：
 
-- 讀取 Steam 最新特價
+- 中央價格檔案無法使用時，向 Steam 即時讀取特價
 - 匯入 Steam 願望清單
 - 匯入 Steam 已擁有遊戲
 
@@ -251,7 +265,7 @@ Chrome 則把第一行改成 `chrome://extensions/`。不同版本的瀏覽器�
 
 ## 六、同步 Steam 特價
 
-安裝並啟用油猴後，入口會使用 Steam 的 `appdetails` 取得價格資料。
+入口會先從 GitHub 下載中央 `price.json`。手動同步也會先重新下載中央檔案；只有檔案不能使用或超過 12 小時時，才會在已安裝油猴的情況下使用 Steam 的 `appdetails`。
 
 ### 自動同步時間
 
@@ -268,7 +282,7 @@ Chrome 則把第一行改成 `chrome://extensions/`。不同版本的瀏覽器�
 - 每批同步 500 款遊戲。
 - 會依序同步到全部完成。
 - 右上角會顯示同步進度。
-- 「手動同步」可以立刻同步全部遊戲。
+- 「手動同步」會先重新下載 `price.json`；中央檔案不能使用時，才會改由油猴同步全部遊戲。
 - 請求失敗時會依 1、3、5、7、9 秒等待後重試。
 
 同步時間會依網路與 Steam 回應速度而不同，通常需要數十秒或更久。
@@ -425,7 +439,7 @@ Chrome 則把第一行改成 `chrome://extensions/`。不同版本的瀏覽器�
 - 閱讀河道
 - JSON 匯出與匯入
 
-只有即時特價同步與 Steam 清單匯入需要油猴。
+只有 Steam 即時特價備援與 Steam 清單匯入需要油猴；中央 `price.json` 的正常讀取不需要油猴。
 
 ---
 
