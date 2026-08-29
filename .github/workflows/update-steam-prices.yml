@@ -1,0 +1,54 @@
+name: 更新 Steam 價格快照
+
+on:
+  # GitHub Actions 使用 UTC；以下對應台灣時間每日 02:10、06:10、10:10、14:10、18:10、22:10。
+  schedule:
+    - cron: "10 2,6,10,14,18,22 * * *"
+  # 初次推送或更新同步程式時立即產生一次價格快照。
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-steam-prices.yml"
+      - "scripts/update_steam_prices.py"
+      - "data/appids.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: steam-price-update
+  cancel-in-progress: false
+
+jobs:
+  update-price:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 下載專案
+        uses: actions/checkout@v4
+
+      - name: 準備 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: 安裝更新器依賴
+        run: python -m pip install --disable-pip-version-check requests
+
+      - name: 從 Steam 產生 price.json
+        run: python scripts/update_steam_prices.py --appids data/appids.json --output data/price.json
+
+      - name: 提交新的價格快照
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/price.json
+          if git diff --cached --quiet -- data/price.json; then
+            echo "price.json 沒有變更"
+            exit 0
+          fi
+          git commit -m "更新 Steam 價格快照"
+          git push

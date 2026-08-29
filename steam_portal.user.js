@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Steam 玩家心得入口－特價與清單匯入
 // @namespace    steam-portal-local
-// @version      1.4.0
-// @description  讓 Steam 單檔入口批次讀取價格，並從已登入的 Steam 清單匯入 App ID。
+// @version      1.5.0
+// @description  讓 Steam 單檔入口優先讀取中央價格，並從已登入的 Steam 清單匯入 App ID。
 // @match        file:///*
+// @match        https://gesen2egee.github.io/steam_portal/*
 // @match        https://store.steampowered.com/*
 // @match        https://steamcommunity.com/*
 // @grant        GM_getValue
@@ -11,6 +12,7 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_xmlhttpRequest
 // @connect      store.steampowered.com
+// @connect      raw.githubusercontent.com
 // @run-at       document-start
 // @noframes
 // ==/UserScript==
@@ -22,8 +24,11 @@
   var USERSCRIPT_SOURCE = "steam-portal-userscript";
   var REQUEST_TYPE = "steam-portal-sale-batch-request";
   var RESPONSE_TYPE = "steam-portal-sale-batch-response";
+  var PRICE_REQUEST_TYPE = "steam-portal-price-snapshot-request";
+  var PRICE_RESPONSE_TYPE = "steam-portal-price-snapshot-response";
   var MAX_BATCH_SIZE = 500;
   var STEAM_URL = "https://store.steampowered.com/api/appdetails/";
+  var PRICE_SNAPSHOT_URL = "https://raw.githubusercontent.com/gesen2egee/steam_portal/main/data/price.json";
   var STEAM_USERDATA_URL = "https://store.steampowered.com/dynamicstore/userdata/";
 
   var IMPORT_REQUEST_KEY = "steam-portal-import-request-v1";
@@ -39,7 +44,10 @@
   var handledImportRequests = Object.create(null);
 
   function isPortalPage() {
-    return location.protocol === "file:";
+    return location.protocol === "file:" || (
+      String(location.hostname || "").toLowerCase() === "gesen2egee.github.io" &&
+      /^\/steam_portal(?:\/|$)/i.test(String(location.pathname || ""))
+    );
   }
 
   function normalizeImportKind(value) {
@@ -606,6 +614,52 @@
     }
   }
 
+  function requestPriceSnapshot(requestId) {
+    var separator = PRICE_SNAPSHOT_URL.indexOf("?") >= 0 ? "&" : "?";
+    var url = PRICE_SNAPSHOT_URL + separator + "v=" + encodeURIComponent(String(Date.now()));
+    var settled = false;
+
+    function fail(message) {
+      if (settled) return;
+      settled = true;
+      sendPageMessage({ type: PRICE_RESPONSE_TYPE, requestId: requestId, ok: false, payload: null, error: message });
+    }
+
+    try {
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: url,
+        timeout: 30000,
+        headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+        onload: function (response) {
+          if (settled) return;
+          if (response.status < 200 || response.status >= 300) {
+            fail("GitHub price.json HTTP " + response.status);
+            return;
+          }
+          var parsed;
+          try {
+            parsed = JSON.parse(response.responseText || "{}");
+          } catch (error) {
+            fail("GitHub price.json 格式無法讀取");
+            return;
+          }
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            fail("GitHub price.json 不是有效物件");
+            return;
+          }
+          settled = true;
+          sendPageMessage({ type: PRICE_RESPONSE_TYPE, requestId: requestId, ok: true, payload: parsed, error: "" });
+        },
+        onerror: function () { fail("無法連線到 GitHub price.json"); },
+        ontimeout: function () { fail("GitHub price.json 請求逾時"); },
+        onabort: function () { fail("GitHub price.json 請求被中止"); }
+      });
+    } catch (error) {
+      fail("油猴腳本無法建立 price.json 請求");
+    }
+  }
+
   function sendResponse(requestId, ok, items, error) {
     window.postMessage({
       source: USERSCRIPT_SOURCE,
@@ -620,6 +674,12 @@
   window.addEventListener("message", function (event) {
     var message = event.data;
     if (!message) return;
+    if (isPortalPage() && message.source === PAGE_SOURCE && message.type === PRICE_REQUEST_TYPE) {
+      var priceRequestId = String(message.requestId || "");
+      if (!priceRequestId) return;
+      requestPriceSnapshot(priceRequestId);
+      return;
+    }
     if (message.source === PAGE_SOURCE && message.type === REQUEST_TYPE) {
       var requestId = String(message.requestId || "");
       var appids = normalizeAppIds(message.appids);
