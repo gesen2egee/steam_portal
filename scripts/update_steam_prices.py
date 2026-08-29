@@ -23,8 +23,9 @@ STEAM_APPDETAILS_URL = "https://store.steampowered.com/api/appdetails/"
 DEFAULT_APPIDS_FILE = "data/appids.json"
 DEFAULT_OUTPUT_FILE = "data/price.json"
 DEFAULT_BATCH_SIZE = 500
-DEFAULT_RETRIES = 3
-DEFAULT_RETRY_DELAY_SECONDS = 5.0
+DEFAULT_RETRIES = 5
+DEFAULT_RETRY_DELAY_SECONDS = 10.0
+DEFAULT_BATCH_DELAY_SECONDS = 2.0
 USER_AGENT = "steam-portal-price-updater/1.0 (+GitHub Actions)"
 _PRICE_RE = re.compile(r"\d[\d,.]*")
 
@@ -166,7 +167,13 @@ def _request_batch(
         try:
             response = session.get(STEAM_APPDETAILS_URL, params=params, timeout=(15, 90))
             response.raise_for_status()
-            parsed = response.json()
+            if not response.text.strip():
+                raise ValueError(f"Steam 回傳空內容（HTTP {response.status_code}）")
+            try:
+                parsed = response.json()
+            except ValueError as error:
+                preview = " ".join(response.text[:160].split())
+                raise ValueError(f"Steam JSON 無法解析（HTTP {response.status_code}，內容開頭：{preview!r}）") from error
             if not isinstance(parsed, dict):
                 raise ValueError("Steam 回傳的 JSON 不是物件")
             missing = [str(appid) for appid in batch if str(appid) not in parsed]
@@ -214,12 +221,15 @@ def update_prices(
     batch_size: int = DEFAULT_BATCH_SIZE,
     retries: int = DEFAULT_RETRIES,
     retry_delay_seconds: float = DEFAULT_RETRY_DELAY_SECONDS,
+    batch_delay_seconds: float = DEFAULT_BATCH_DELAY_SECONDS,
     limit: int | None = None,
 ) -> Path:
     if batch_size <= 0:
         raise ValueError("batch-size 必須大於 0")
     if retries < 0:
         raise ValueError("retries 不可小於 0")
+    if retry_delay_seconds < 0 or batch_delay_seconds < 0:
+        raise ValueError("等待秒數不可小於 0")
     if limit is not None and limit <= 0:
         raise ValueError("limit 必須大於 0")
     appids_path = Path(appids_file).resolve()
@@ -247,8 +257,8 @@ def update_prices(
         for appid in batch:
             items[str(appid)] = _normalize_entry(response_body[str(appid)], synced_at)
         print(f"[{index}/{len(batches)}] 已同步 {len(items)}/{len(appids)} 個 App ID", flush=True)
-        if index < len(batches):
-            time.sleep(1)
+        if index < len(batches) and batch_delay_seconds:
+            time.sleep(batch_delay_seconds)
 
     payload = {
         "version": 1,
@@ -272,10 +282,11 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="每次 Steam 請求的 App ID 數量")
     parser.add_argument("--retries", type=int, default=DEFAULT_RETRIES, help="每批失敗後的重試次數")
     parser.add_argument("--retry-delay-seconds", type=float, default=DEFAULT_RETRY_DELAY_SECONDS, help="重試前等待秒數")
+    parser.add_argument("--batch-delay-seconds", type=float, default=DEFAULT_BATCH_DELAY_SECONDS, help="批次之間等待秒數")
     parser.add_argument("--limit", type=int, default=None, help="只同步前 N 個 App ID，供本機試跑")
     args = parser.parse_args()
     try:
-        update_prices(args.appids, args.output, args.batch_size, args.retries, args.retry_delay_seconds, args.limit)
+        update_prices(args.appids, args.output, args.batch_size, args.retries, args.retry_delay_seconds, args.batch_delay_seconds, args.limit)
     except Exception as error:
         print(f"[ERROR] price.json 保持不變：{error}", flush=True)
         return 1

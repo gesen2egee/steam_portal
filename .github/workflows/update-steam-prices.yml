@@ -24,7 +24,7 @@ concurrency:
 jobs:
   update-price:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: 下載專案
         uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests
 
       - name: 從 Steam 產生 price.json
-        run: python scripts/update_steam_prices.py --appids data/appids.json --output data/price.json
+        run: python scripts/update_steam_prices.py --appids data/appids.json --output data/price.json --retries 5 --retry-delay-seconds 10 --batch-delay-seconds 2
 
       - name: 提交新的價格快照
         shell: bash
