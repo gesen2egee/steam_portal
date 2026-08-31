@@ -4,12 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
-  <meta name="steam-portal-build" content="b57da716175856f5">
+  <meta name="steam-portal-build" content="334d9d1a69e0cb8b">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal-b57da716175856f5.css">
+  <link rel="stylesheet" href="assets/steam_portal-334d9d1a69e0cb8b.css">
 </head>
 <body>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var mobilePreview = params.get("mobile") === "1" || params.get("m") === "1";
+      var mobileViewport = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+      if (mobilePreview) document.body.classList.add("mobile-preview");
+      if (mobilePreview || mobileViewport) document.body.classList.add("mobile-layout");
+    }());
+  </script>
   <div class="portal-shell">
     <button type="button" class="mobile-hub-button" id="mobileHubButton" aria-label="開啟搜尋、河道與篩選" aria-expanded="false">☰</button>
     <header class="topbar">
@@ -324,13 +333,13 @@
   <script>
   (function () {
     "use strict";
-    var manifestUrl = "data/manifest-b57da716175856f5.json";
+    var manifestUrl = "data/manifest-334d9d1a69e0cb8b.json";
     var bucketPromises = Object.create(null);
     var manifestPromise = fetch(manifestUrl, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
       if (!response.ok) throw new Error("manifest HTTP " + response.status);
       return response.json();
     }).then(function (manifest) {
-      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "b57da716175856f5") throw new Error("Portal 發布版本不一致");
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "334d9d1a69e0cb8b") throw new Error("Portal 發布版本不一致");
       return manifest;
     });
 
@@ -407,13 +416,13 @@
       });
     }
 
-    window.__STEAM_PORTAL_BUILD_ID__ = "b57da716175856f5";
+    window.__STEAM_PORTAL_BUILD_ID__ = "334d9d1a69e0cb8b";
     window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
     window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
     loadCatalog().then(function (payload) {
       window.__STEAM_PORTAL_DATA__ = payload;
       var script = document.createElement("script");
-      script.src = "assets/steam_portal-b57da716175856f5.js";
+      script.src = "assets/steam_portal-334d9d1a69e0cb8b.js";
       script.onerror = showLoadError;
       document.body.appendChild(script);
     }).catch(showLoadError);
