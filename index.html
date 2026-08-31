@@ -4,18 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
+  <meta name="steam-portal-build" content="e20744169a93d046">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal.css">
+  <link rel="stylesheet" href="assets/steam_portal-e20744169a93d046.css">
 </head>
 <body>
-  <div class="sale-sync-overlay" id="saleSyncOverlay" hidden aria-live="polite">
-    <div class="sale-sync-overlay-inner">
-      <div class="sale-sync-head"><span id="saleSyncLabel">正在讀取特價資訊中</span><strong id="saleSyncProgressText">0 / 0</strong></div>
-      <div class="sale-sync-progress"><span id="saleSyncProgressFill"></span></div>
-    </div>
-  </div>
   <div class="portal-shell">
+    <button type="button" class="mobile-hub-button" id="mobileHubButton" aria-label="開啟搜尋、河道與篩選" aria-expanded="false">☰</button>
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand" href="#" id="brandLink" aria-label="回到 Steam 玩家心得搜尋入口">
@@ -30,7 +26,7 @@
         </div>
         <div class="top-actions">
           <div class="sync-control"><span class="sync-age" id="saleSyncAge">尚未同步</span><button type="button" class="button sync-button" id="manualSaleSyncButton" title="立即同步全部特價資料">手動同步</button></div>
-          <button type="button" class="button name-toggle" id="nameToggleButton" aria-label="切換原名與繁體中文名" aria-pressed="false" title="切換顯示名稱">繁中名</button>
+          <button type="button" class="button settings-button" id="settingsButton" aria-label="開啟設定" title="設定">⚙</button>
           <button type="button" class="button mobile-filter-button" id="mobileFilterButton">☰ 篩選</button>
         </div>
       </div>
@@ -39,6 +35,19 @@
     <div class="filters-backdrop" id="filtersBackdrop" hidden></div>
     <main id="browseView" class="workspace">
       <aside class="filters" id="filtersPanel" aria-label="搜尋篩選">
+        <div class="mobile-drawer-head">
+          <div><strong>河道功能</strong><span>搜尋、切換與篩選</span></div>
+          <button type="button" class="mobile-drawer-close" id="mobileDrawerCloseButton" aria-label="關閉河道功能">×</button>
+        </div>
+        <form class="mobile-drawer-search" id="mobileSearchForm" role="search">
+          <input id="mobileSearchInput" type="search" autocomplete="off" placeholder="搜尋遊戲名稱或 App ID" aria-label="搜尋遊戲">
+          <button type="submit" aria-label="開始搜尋">⌕</button>
+        </form>
+        <section class="mobile-river-switcher" aria-label="切換河道">
+          <div class="mobile-drawer-section-title">切換河道</div>
+          <div class="mobile-river-list" id="mobileRiverList"></div>
+        </section>
+        <button type="button" class="button mobile-settings-entry" id="mobileSettingsButton">⚙ 設定與資料管理</button>
         <div class="filters-head">
           <h2>搜尋篩選</h2>
           <button type="button" class="text-button" id="clearFiltersButton">清除全部</button>
@@ -101,23 +110,20 @@
         </aside>
 
       <section class="results" aria-live="polite">
+        <header class="mobile-river-header">
+          <div><span>目前河道</span><strong id="mobileRiverTitle">探索河道</strong></div>
+          <p id="mobileRiverProgress">0 / 0</p>
+        </header>
         <div class="results-head">
           <div class="eyebrow">Steam-inspired discovery</div>
           <div class="results-title-row">
             <h1>找到下一款想讀、想玩的遊戲</h1>
             <div class="results-head-actions">
-              <div class="import-actions" aria-label="匯入 Steam 清單">
-                <span class="import-status" id="importStatus" role="status" aria-live="polite"></span>
-                <div class="import-button-row">
-                  <button type="button" class="button import-button" id="importWishlistButton" title="開啟已登入的 Steam 願望清單頁並匯入">匯入願望清單</button>
-                  <button type="button" class="button import-button" id="importOwnedButton" title="開啟已登入的 Steam 遊戲清單頁並匯入">匯入已擁有遊戲</button>
-                </div>
-              </div>
-              <div class="backup-actions" aria-label="手動匯入匯出">
+              <div class="backup-actions" aria-label="匯出">
                 <span class="backup-status" id="backupStatus" role="status" aria-live="polite"></span>
                 <div class="import-button-row">
-                  <button type="button" class="button import-button" id="exportStateButton" title="下載收藏、河道與閱讀狀態">匯出同步資料</button>
-                  <button type="button" class="button import-button" id="importStateButton" title="從 JSON 檔案合併收藏、河道與閱讀狀態">匯入同步資料</button>
+                  <button type="button" class="button import-button" id="exportVisibleListButton" title="匯出目前河道或清單中已載入的遊戲原名">匯出遊戲清單</button>
+                  <button type="button" class="button import-button" id="exportStateButton" title="匯出清單、河道與閱讀狀態 JSON">匯出JSON</button>
                   <input id="importStateFile" type="file" accept="application/json,.json" hidden>
                 </div>
               </div>
@@ -160,38 +166,222 @@
     <section id="detailView" class="detail-view" hidden></section>
   </div>
 
+  <div id="settingsBackdrop" class="settings-modal-backdrop" hidden>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-head">
+        <h2 id="settingsTitle">入口設定</h2>
+        <button type="button" class="settings-close" id="settingsCloseButton" aria-label="關閉設定">×</button>
+      </div>
+      <div class="settings-body">
+        <section class="settings-group">
+          <h3>顯示名稱</h3>
+          <div class="settings-options">
+            <label class="settings-choice"><input type="radio" name="settingsNameMode" value="original"> 原名</label>
+            <label class="settings-choice"><input type="radio" name="settingsNameMode" value="traditional"> 繁中名</label>
+          </div>
+        </section>
+        <section class="settings-group">
+          <h3>負評／劇透遮罩</h3>
+          <label class="settings-choice"><input type="checkbox" id="settingsHideSpoilers"> 預設隱藏以 || 標記的內容</label>
+          <p>預設關閉。在作品頁按 B 可只切換目前頁面的遮罩。</p>
+        </section>
+        <section class="settings-group">
+          <h3>玩家心得版型</h3>
+          <div class="settings-options">
+            <label class="settings-choice"><input type="radio" name="settingsDetailLayout" value="interleaved"> 圖文交錯</label>
+            <label class="settings-choice"><input type="radio" name="settingsDetailLayout" value="separated"> 圖文分開</label>
+          </div>
+          <p>預設為圖文交錯。在作品頁按 / 可快速切換。</p>
+        </section>
+        <section class="settings-group">
+          <h3>探索河道預設篩選</h3>
+          <p>保存價格、折扣、好評、年份、語言與試玩版條件，下一次打開入口時套用。搜尋詞與標籤不會保存。</p>
+          <div class="settings-options">
+            <button type="button" class="button" id="settingsCaptureExplore">使用目前篩選</button>
+            <button type="button" class="button ghost" id="settingsClearExplore">清除預設</button>
+          </div>
+          <div class="settings-summary" id="settingsExploreSummary">尚未設定</div>
+        </section>
+        <section class="settings-group">
+          <h3>標籤黑名單</h3>
+          <p>命中黑名單的遊戲不會出現在結果或河道，該標籤也不會顯示。</p>
+          <div class="settings-row">
+            <select class="select-input" id="settingsBlacklistSelect" aria-label="選擇要加入黑名單的標籤"></select>
+            <button type="button" class="button" id="settingsBlacklistAdd">加入</button>
+          </div>
+          <div class="blacklist-list" id="settingsBlacklistList"></div>
+        </section>
+        <section class="settings-group">
+          <h3>成人內容</h3>
+          <label class="settings-choice"><input type="checkbox" id="settingsAdultEnabled"> 顯示成人內容</label>
+          <p>預設關閉。開啟後才會顯示含「裸露」、「色情內容」、「Hentai」標籤，或 required_age 大於 0 的遊戲。</p>
+        </section>
+        <section class="settings-group">
+          <h3>清單管理</h3>
+          <p>建立自己的遊戲清單，或整理收藏、願望清單與已擁有遊戲。清單可設定顏色、是否視為已讀，以及是否用於探索河道推薦。</p>
+          <div class="list-manager">
+            <label class="list-manager-field">選擇清單<select class="select-input" id="settingsListSelect" aria-label="選擇清單"></select></label>
+            <div class="list-manager-grid">
+              <label class="list-manager-field">清單名稱<input class="text-input" id="settingsListName" type="text" maxlength="80" autocomplete="off"></label>
+              <label class="list-manager-field">顏色<select class="select-input" id="settingsListColor" aria-label="清單顏色"></select></label>
+            </div>
+            <div class="settings-options">
+              <label class="settings-choice"><input type="checkbox" id="settingsListRead"> 清單內遊戲視為已讀</label>
+              <label class="settings-choice"><input type="checkbox" id="settingsListRecommended"> 納入探索推薦</label>
+            </div>
+            <div class="list-manager-actions">
+              <button type="button" class="button" id="settingsCreateList">建立清單</button>
+              <button type="button" class="button" id="settingsSaveList">保存清單設定</button>
+              <button type="button" class="button settings-danger" id="settingsDeleteList">刪除清單</button>
+            </div>
+            <div class="list-manager-summary" id="settingsListSummary"></div>
+            <label class="list-manager-field">搜尋清單遊戲<input class="text-input list-item-search" id="settingsListItemSearch" type="search" placeholder="輸入原名或 App ID"></label>
+            <div class="list-items" id="settingsListItems"></div>
+            <div class="list-manager-grid">
+              <label class="list-manager-field">複製／移動到<select class="select-input" id="settingsListActionTarget" aria-label="複製或移動的目標清單"></select></label>
+              <div class="list-manager-field"><span>整理操作</span><span class="list-import-help">每個遊戲可上移、下移、複製、移動或刪除。</span></div>
+            </div>
+            <label class="list-manager-field">匯入清單（每行一個遊戲原名，也可貼 App ID）<textarea class="text-input list-import-text" id="settingsListImportText" placeholder="遊戲原名\n另一款遊戲\n123456"></textarea></label>
+            <div class="list-manager-actions"><button type="button" class="button" id="settingsImportList">匯入清單</button><span class="list-manager-summary" id="settingsListImportStatus" role="status" aria-live="polite"></span></div>
+          </div>
+        </section>
+        <section class="settings-group">
+          <h3>Steam 清單手動匯入</h3>
+          <p>已擁有遊戲使用完整載入後保存的 MHTML；願望清單使用 SteamID64 產生 JSON 網址，再把回傳內容貼回 Portal。</p>
+          <div class="list-manager-actions">
+            <button type="button" class="button" id="settingsImportStateButton">匯入JSON</button>
+          </div>
+          <div class="steam-import-help">
+            <strong>正式匯入方式</strong>
+            <ol>
+              <li>按下方按鈕選擇 Steam 遊戲頁的 MHTML 檔。Steam 頁面要先拉到底，確認全部遊戲載入後再按「另存」。</li>
+              <li>Portal 會從 MHTML 自動取得已擁有遊戲與 SteamID64，並建立或更新「已擁有遊戲」清單。</li>
+              <li>取得 SteamID64 後，按自動產生的願望清單 JSON 網址，複製回傳內容，再貼到下方欄位匯入。</li>
+            </ol>
+            <div class="list-manager-actions"><label class="button" for="settingsOwnedMhtml">選擇已擁有遊戲 MHTML</label><input id="settingsOwnedMhtml" type="file" accept=".mhtml,.mht,message/rfc822" hidden></div>
+            <div class="steam-id-row"><input class="text-input" id="settingsSteamId64" type="text" inputmode="numeric" placeholder="SteamID64（自動偵測，也可手動貼上）"><button type="button" class="button" id="settingsBuildWishlistUrl">產生網址</button></div>
+            <a class="steam-api-link" id="settingsWishlistApiLink" href="#" target="_blank" rel="noopener" hidden>開啟願望清單 JSON</a>
+            <textarea class="text-input list-import-text" id="settingsWishlistJson" placeholder="把願望清單 API 回傳的 JSON 貼到這裡"></textarea>
+            <button type="button" class="button" id="settingsImportWishlistJson">匯入貼上的願望清單 JSON</button>
+            <div class="steam-import-status" id="settingsManualImportStatus" role="status" aria-live="polite"></div>
+            <p class="list-import-help">匯入願望清單／已擁有遊戲會取代該官方清單的內容；手動匯入清單則只會新增，不會刪除原有項目。</p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <h3>閱讀紀錄</h3>
+          <button type="button" class="button settings-danger" id="settingsClearRead">清除已讀</button>
+          <div class="danger-confirm" id="settingsClearReadConfirm" hidden>
+            <strong>危險操作：確定清除已讀紀錄？</strong>
+            <p>此動作無法復原。收藏、願望清單與已擁有遊戲仍會依既有規則視為已讀。</p>
+            <div class="danger-actions">
+              <button type="button" class="button ghost" id="settingsClearReadCancel">取消</button>
+              <button type="button" class="button settings-danger" id="settingsClearReadApply">確認清除</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
   <div id="portalToast" class="portal-toast" role="status" aria-live="polite"></div>
-  <script id="gameData" type="application/json"></script>
   <script>
   (function () {
     "use strict";
-    var dataFiles = ["data/games-0001.json","data/games-0002.json","data/games-0003.json","data/games-0004.json","data/games-0005.json","data/games-0006.json","data/games-0007.json","data/games-0008.json","data/games-0009.json","data/games-0010.json","data/games-0011.json","data/games-0012.json","data/games-0013.json"];
+    var manifestUrl = "data/manifest-e20744169a93d046.json";
+    var bucketPromises = Object.create(null);
+    var manifestPromise = fetch(manifestUrl, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
+      if (!response.ok) throw new Error("manifest HTTP " + response.status);
+      return response.json();
+    }).then(function (manifest) {
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "e20744169a93d046") throw new Error("Portal 發布版本不一致");
+      return manifest;
+    });
+
+    function formatLoadSize(bytes) {
+      return (Math.max(0, Number(bytes) || 0) / (1024 * 1024)).toFixed(1) + " MiB";
+    }
+
+    function showLoadProgress(loadedBytes, totalBytes) {
+      var target = document.getElementById("resultCount");
+      if (target) target.textContent = "正在載入遊戲目錄 " + formatLoadSize(loadedBytes) + " / " + formatLoadSize(totalBytes);
+    }
+
     function showLoadError(error) {
       console.error(error);
-      var panel = document.createElement("div");
-      panel.style.cssText = "margin:24px auto;max-width:720px;padding:18px;color:#fff;background:#6b2830;border:1px solid #ff7b7b;border-radius:8px;font:16px/1.6 sans-serif";
-      panel.textContent = "GitHub Pages 遊戲資料載入失敗，請重新整理或稍後再試。";
-      document.body.appendChild(panel);
+      var target = document.getElementById("resultCount");
+      if (target) target.textContent = "遊戲資料載入失敗，請重新整理或稍後再試。";
     }
-    Promise.all(dataFiles.map(function (file) {
+
+    function fetchJson(file, onProgress) {
       return fetch(file, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
         if (!response.ok) throw new Error(file + " HTTP " + response.status);
-        return response.json();
+        if (!onProgress || !response.body || typeof response.body.getReader !== "function") return response.json();
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder("utf-8");
+        var text = "";
+        function readNext() {
+          return reader.read().then(function (result) {
+            if (result.done) return JSON.parse(text + decoder.decode());
+            text += decoder.decode(result.value, { stream: true });
+            onProgress(result.value.byteLength);
+            return readNext();
+          });
+        }
+        return readNext();
       });
-    })).then(function (chunks) {
-      var items = [];
-      chunks.forEach(function (chunk) {
-        if (!Array.isArray(chunk)) throw new Error("遊戲資料分片格式錯誤");
-        items = items.concat(chunk);
+    }
+
+    function loadCatalog() {
+      return manifestPromise.then(function (manifest) {
+        var loadedBytes = 0;
+        var totalBytes = Number(manifest.catalog_bytes || 0);
+        var files = manifest.catalog_files || [];
+        showLoadProgress(loadedBytes, totalBytes);
+        return Promise.all(files.map(function (file) {
+          return fetchJson(file, function (delta) {
+            loadedBytes += delta;
+            showLoadProgress(loadedBytes, totalBytes);
+          }).then(function (chunk) {
+            if (!Array.isArray(chunk)) throw new Error("遊戲目錄分片格式錯誤");
+            return chunk;
+          });
+        })).then(function (chunks) {
+          var items = [];
+          chunks.forEach(function (chunk) { items = items.concat(chunk); });
+          if (items.length !== manifest.item_count) throw new Error("遊戲目錄數量與 manifest 不一致");
+          return { version: 3, build_id: manifest.build_id, generated_at: manifest.generated_at, items: items };
+        });
       });
-      if (!items.length) throw new Error("遊戲資料分片沒有內容");
-      window.__STEAM_PORTAL_DATA__ = { version: 2, items: items };
-      var portalScript = document.createElement("script");
-      portalScript.src = "assets/steam_portal.js";
-      portalScript.onerror = showLoadError;
-      document.body.appendChild(portalScript);
+    }
+
+    function loadDetail(appid) {
+      var id = String(appid || "");
+      var numeric = Number(id);
+      if (!Number.isInteger(numeric) || numeric <= 0) return Promise.reject(new Error("App ID 無效"));
+      var bucket = String(numeric % 256);
+      return manifestPromise.then(function (manifest) {
+        var file = manifest.detail_buckets && manifest.detail_buckets[bucket];
+        if (!file) throw new Error("找不到遊戲詳情分片");
+        if (!bucketPromises[bucket]) bucketPromises[bucket] = fetchJson(file);
+        return bucketPromises[bucket].then(function (records) {
+          if (!records || typeof records !== "object" || !records[id]) throw new Error("遊戲詳情不存在");
+          return records[id];
+        });
+      });
+    }
+
+    window.__STEAM_PORTAL_BUILD_ID__ = "e20744169a93d046";
+    window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
+    window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
+    loadCatalog().then(function (payload) {
+      window.__STEAM_PORTAL_DATA__ = payload;
+      var script = document.createElement("script");
+      script.src = "assets/steam_portal-e20744169a93d046.js";
+      script.onerror = showLoadError;
+      document.body.appendChild(script);
     }).catch(showLoadError);
   }());
   </script>
+
 </body>
 </html>
