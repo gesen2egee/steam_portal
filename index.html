@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
-  <meta name="steam-portal-build" content="ec2e70601a374603">
+  <meta name="steam-portal-build" content="b57da716175856f5">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal-ec2e70601a374603.css">
+  <link rel="stylesheet" href="assets/steam_portal-b57da716175856f5.css">
 </head>
 <body>
   <div class="portal-shell">
@@ -205,6 +205,15 @@
           <div class="settings-summary" id="settingsExploreSummary">尚未設定</div>
         </section>
         <section class="settings-group">
+          <h3>推薦排序</h3>
+          <div class="settings-options">
+            <label class="settings-choice"><input type="radio" name="settingsExploreSort" value="tag_weighted"> 標籤加權</label>
+            <label class="settings-choice"><input type="radio" name="settingsExploreSort" value="cluster"> 聚類</label>
+            <label class="settings-choice"><input type="radio" name="settingsExploreSort" value="random"> 隨機</label>
+          </div>
+          <p>A／B 兩輪會交錯排列；A 輪依這裡挑選，B 輪從其餘遊戲隨機補入。聚類模式會使用推薦清單出現過的 `cluster_id`。</p>
+        </section>
+        <section class="settings-group">
           <h3>標籤黑名單</h3>
           <p>命中黑名單的遊戲不會出現在結果或河道，該標籤也不會顯示。</p>
           <div class="settings-row">
@@ -271,7 +280,7 @@
         </section>
         <section class="settings-group">
           <h3>跨裝置同步</h3>
-          <p>把清單、固定搜尋河道、篩選、收藏與閱讀紀錄壓縮後保存。建立後只要複製「跨裝置入口網址」，在手機或其他瀏覽器開啟即可讀取與更新。</p>
+          <p>把清單、固定搜尋河道、篩選、收藏與閱讀紀錄壓縮後保存。第一次用「跨裝置入口網址」開啟後，網址會記在這個瀏覽器；之後每次開啟網頁都會先自動同步一次。</p>
           <div class="steam-import-help remote-sync-help">
             <strong>注意：同步網址包含 Rentry 編輯碼</strong>
             <p>任何取得這個網址的人都能讀取、修改或刪除同步資料；請不要把網址公開貼出。資料會以公開貼文形式保存，不包含 Steam 登入密碼或 Token。</p>
@@ -281,13 +290,18 @@
             <div class="list-manager-actions">
               <button type="button" class="button primary" id="settingsRemotePublish">建立／更新同步</button>
               <button type="button" class="button" id="settingsRemoteLoad">讀取同步網址</button>
-              <button type="button" class="button" id="settingsRemoteCopy" disabled>複製入口網址</button>
             </div>
-            <label class="list-manager-field">跨裝置入口網址<input class="text-input" id="settingsRemoteShareUrl" type="url" readonly placeholder="建立同步後可複製這個網址"></label>
+            <div class="list-manager-field remote-sync-share-field">
+              <span>跨裝置入口網址</span>
+              <div class="remote-sync-url-row">
+                <input class="text-input" id="settingsRemoteShareUrl" type="url" readonly placeholder="建立同步後可複製這個網址">
+                <button type="button" class="button" id="settingsRemoteCopy" disabled>複製網址</button>
+              </div>
+            </div>
             <label class="list-manager-field">可回復版本<select class="select-input" id="settingsRemoteHistory" aria-label="選擇可回復的同步版本"><option value="">尚無歷史版本</option></select></label>
             <div class="list-manager-actions"><button type="button" class="button" id="settingsRemoteRollback" disabled>回復選定版本</button></div>
             <div class="steam-import-status" id="settingsRemoteStatus" role="status" aria-live="polite"></div>
-            <p class="list-import-help">每次更新會建立新的 Rentry 分片，主索引只在全部分片成功後更新；舊版本會保留供回復。</p>
+            <p class="list-import-help">每次更新會建立新的 Rentry 分片，主索引只在全部分片成功後更新；舊版本會保留供回復。若最新版本驗證失敗，會依序嘗試較早版本；全部失敗就保留本機資料，不套用同步。</p>
           </div>
         </section>
         <section class="settings-group">
@@ -310,13 +324,13 @@
   <script>
   (function () {
     "use strict";
-    var manifestUrl = "data/manifest-ec2e70601a374603.json";
+    var manifestUrl = "data/manifest-b57da716175856f5.json";
     var bucketPromises = Object.create(null);
     var manifestPromise = fetch(manifestUrl, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
       if (!response.ok) throw new Error("manifest HTTP " + response.status);
       return response.json();
     }).then(function (manifest) {
-      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "ec2e70601a374603") throw new Error("Portal 發布版本不一致");
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "b57da716175856f5") throw new Error("Portal 發布版本不一致");
       return manifest;
     });
 
@@ -393,13 +407,13 @@
       });
     }
 
-    window.__STEAM_PORTAL_BUILD_ID__ = "ec2e70601a374603";
+    window.__STEAM_PORTAL_BUILD_ID__ = "b57da716175856f5";
     window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
     window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
     loadCatalog().then(function (payload) {
       window.__STEAM_PORTAL_DATA__ = payload;
       var script = document.createElement("script");
-      script.src = "assets/steam_portal-ec2e70601a374603.js";
+      script.src = "assets/steam_portal-b57da716175856f5.js";
       script.onerror = showLoadError;
       document.body.appendChild(script);
     }).catch(showLoadError);
