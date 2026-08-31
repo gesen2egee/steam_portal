@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
-  <meta name="steam-portal-build" content="08ca2879146f124a">
+  <meta name="steam-portal-build" content="ec2e70601a374603">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal-08ca2879146f124a.css">
+  <link rel="stylesheet" href="assets/steam_portal-ec2e70601a374603.css">
 </head>
 <body>
   <div class="portal-shell">
@@ -310,13 +310,13 @@
   <script>
   (function () {
     "use strict";
-    var manifestUrl = "data/manifest-08ca2879146f124a.json";
+    var manifestUrl = "data/manifest-ec2e70601a374603.json";
     var bucketPromises = Object.create(null);
     var manifestPromise = fetch(manifestUrl, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
       if (!response.ok) throw new Error("manifest HTTP " + response.status);
       return response.json();
     }).then(function (manifest) {
-      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "08ca2879146f124a") throw new Error("Portal 發布版本不一致");
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "ec2e70601a374603") throw new Error("Portal 發布版本不一致");
       return manifest;
     });
 
@@ -393,13 +393,13 @@
       });
     }
 
-    window.__STEAM_PORTAL_BUILD_ID__ = "08ca2879146f124a";
+    window.__STEAM_PORTAL_BUILD_ID__ = "ec2e70601a374603";
     window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
     window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
     loadCatalog().then(function (payload) {
       window.__STEAM_PORTAL_DATA__ = payload;
       var script = document.createElement("script");
-      script.src = "assets/steam_portal-08ca2879146f124a.js";
+      script.src = "assets/steam_portal-ec2e70601a374603.js";
       script.onerror = showLoadError;
       document.body.appendChild(script);
     }).catch(showLoadError);
