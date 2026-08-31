@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
-  <meta name="steam-portal-build" content="1715b4002a4c09e9">
+  <meta name="steam-portal-build" content="08ca2879146f124a">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal-1715b4002a4c09e9.css">
+  <link rel="stylesheet" href="assets/steam_portal-08ca2879146f124a.css">
 </head>
 <body>
   <div class="portal-shell">
@@ -47,6 +47,7 @@
           <div class="mobile-drawer-section-title">切換河道</div>
           <div class="mobile-river-list" id="mobileRiverList"></div>
         </section>
+        <label class="mobile-drawer-sort">排序<select class="select-input" id="mobileSortSelect" aria-label="結果排序"><option value="river">探索河道順序</option><option value="river_reverse">加入順序（反向）</option><option value="relevance">相關性</option><option value="updated">最新收錄</option><option value="release">發行日期</option><option value="name">名稱 A-Z</option><option value="price_asc">價格由低至高</option><option value="price_desc">價格由高至低</option><option value="review">好評比例</option><option value="review_count">評論數</option></select></label>
         <button type="button" class="button mobile-settings-entry" id="mobileSettingsButton">⚙ 設定與資料管理</button>
         <div class="filters-head">
           <h2>搜尋篩選</h2>
@@ -123,7 +124,7 @@
                 <span class="backup-status" id="backupStatus" role="status" aria-live="polite"></span>
                 <div class="import-button-row">
                   <button type="button" class="button import-button" id="exportVisibleListButton" title="匯出目前河道或清單中已載入的遊戲原名">匯出遊戲清單</button>
-                  <button type="button" class="button import-button" id="exportStateButton" title="匯出清單、河道與閱讀狀態 JSON">匯出JSON</button>
+                  <button type="button" class="button import-button" id="exportStateButton" title="匯出清單、固定河道與閱讀狀態 JSON">匯出JSON</button>
                   <input id="importStateFile" type="file" accept="application/json,.json" hidden>
                 </div>
               </div>
@@ -145,6 +146,7 @@
             <label class="sort-control">排序
               <select class="select-input" id="sortSelect" aria-label="結果排序">
                 <option value="river">探索河道順序</option>
+                <option value="river_reverse">加入順序（反向）</option>
                 <option value="relevance">相關性</option>
                 <option value="updated">最新收錄</option>
                 <option value="release">發行日期</option>
@@ -268,6 +270,27 @@
           </div>
         </section>
         <section class="settings-group">
+          <h3>跨裝置同步</h3>
+          <p>把清單、固定搜尋河道、篩選、收藏與閱讀紀錄壓縮後保存。建立後只要複製「跨裝置入口網址」，在手機或其他瀏覽器開啟即可讀取與更新。</p>
+          <div class="steam-import-help remote-sync-help">
+            <strong>注意：同步網址包含 Rentry 編輯碼</strong>
+            <p>任何取得這個網址的人都能讀取、修改或刪除同步資料；請不要把網址公開貼出。資料會以公開貼文形式保存，不包含 Steam 登入密碼或 Token。</p>
+          </div>
+          <div class="list-manager">
+            <label class="list-manager-field">同步主網址<input class="text-input" id="settingsRemoteSyncUrl" type="url" inputmode="url" autocomplete="off" placeholder="建立後會顯示 Rentry 同步網址"></label>
+            <div class="list-manager-actions">
+              <button type="button" class="button primary" id="settingsRemotePublish">建立／更新同步</button>
+              <button type="button" class="button" id="settingsRemoteLoad">讀取同步網址</button>
+              <button type="button" class="button" id="settingsRemoteCopy" disabled>複製入口網址</button>
+            </div>
+            <label class="list-manager-field">跨裝置入口網址<input class="text-input" id="settingsRemoteShareUrl" type="url" readonly placeholder="建立同步後可複製這個網址"></label>
+            <label class="list-manager-field">可回復版本<select class="select-input" id="settingsRemoteHistory" aria-label="選擇可回復的同步版本"><option value="">尚無歷史版本</option></select></label>
+            <div class="list-manager-actions"><button type="button" class="button" id="settingsRemoteRollback" disabled>回復選定版本</button></div>
+            <div class="steam-import-status" id="settingsRemoteStatus" role="status" aria-live="polite"></div>
+            <p class="list-import-help">每次更新會建立新的 Rentry 分片，主索引只在全部分片成功後更新；舊版本會保留供回復。</p>
+          </div>
+        </section>
+        <section class="settings-group">
           <h3>閱讀紀錄</h3>
           <button type="button" class="button settings-danger" id="settingsClearRead">清除已讀</button>
           <div class="danger-confirm" id="settingsClearReadConfirm" hidden>
@@ -287,13 +310,13 @@
   <script>
   (function () {
     "use strict";
-    var manifestUrl = "data/manifest-1715b4002a4c09e9.json";
+    var manifestUrl = "data/manifest-08ca2879146f124a.json";
     var bucketPromises = Object.create(null);
     var manifestPromise = fetch(manifestUrl, { cache: "no-store", headers: { Accept: "application/json" } }).then(function (response) {
       if (!response.ok) throw new Error("manifest HTTP " + response.status);
       return response.json();
     }).then(function (manifest) {
-      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "1715b4002a4c09e9") throw new Error("Portal 發布版本不一致");
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "08ca2879146f124a") throw new Error("Portal 發布版本不一致");
       return manifest;
     });
 
@@ -370,13 +393,13 @@
       });
     }
 
-    window.__STEAM_PORTAL_BUILD_ID__ = "1715b4002a4c09e9";
+    window.__STEAM_PORTAL_BUILD_ID__ = "08ca2879146f124a";
     window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
     window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
     loadCatalog().then(function (payload) {
       window.__STEAM_PORTAL_DATA__ = payload;
       var script = document.createElement("script");
-      script.src = "assets/steam_portal-1715b4002a4c09e9.js";
+      script.src = "assets/steam_portal-08ca2879146f124a.js";
       script.onerror = showLoadError;
       document.body.appendChild(script);
     }).catch(showLoadError);
