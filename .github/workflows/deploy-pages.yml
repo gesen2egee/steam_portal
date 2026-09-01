@@ -7,8 +7,7 @@ on:
     paths:
       - "index.html"
       - "assets/**"
-      - "data/games-*.json"
-      - "data/price.json"
+      - "data/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
