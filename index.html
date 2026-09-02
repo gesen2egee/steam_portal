@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Steam 遊戲玩家心得搜尋入口">
-  <meta name="steam-portal-build" content="3ffa12bda3d5f313">
+  <meta name="steam-portal-build" content="1929c42e1ee60ccb">
   <link rel="icon" type="image/png" href="assets/steam_portal_favicon.png">
   <title>Steam 玩家心得庫｜遊戲搜尋入口</title>
-  <link rel="stylesheet" href="assets/steam_portal-3ffa12bda3d5f313.css">
+  <link rel="stylesheet" href="assets/steam_portal-1929c42e1ee60ccb.css">
 </head>
 <body>
   <script>
@@ -302,6 +302,10 @@
           <p>願望清單與已購買都支援貼上、拖放檔案和選擇檔案；先預覽，確認後才會取代該官方清單。</p>
           <div class="steam-import-help">
             <strong>正式匯入方式</strong>
+            <div class="list-manager-actions">
+              <a class="button" href="https://steamcommunity.com/my/games/" target="_blank" rel="noopener">前往 Steam 遊戲庫</a>
+              <span class="list-manager-summary">先登入 Steam，再把完整遊戲清單另存為 MHTML</span>
+            </div>
             <ol>
               <li>按下方按鈕選擇 Steam 遊戲頁的 MHTML 檔。Steam 頁面要先拉到底，確認全部遊戲載入後再按「另存」。</li>
               <li>Portal 會從 MHTML 自動取得已購買遊戲與 SteamID64，並建立或更新「已購買」清單。</li>
@@ -400,14 +404,14 @@
     var CATALOG_CACHE_STORE = "catalogs";
     var CATALOG_CACHE_TIMEOUT_MS = 2500;
     var catalogLoadFailed = false;
-    var manifestUrl = "data/manifest-3ffa12bda3d5f313.json";
+    var manifestUrl = "data/manifest-1929c42e1ee60ccb.json";
     var bucketPromises = Object.create(null);
     var manifestPromise = fetchJsonWithRetry(manifestUrl, MANIFEST_REQUEST_TIMEOUT_MS, MANIFEST_RETRY_DELAYS_MS, function (attempt, delay) {
       if (catalogLoadFailed) return;
       var target = document.getElementById("resultCount");
       if (target) target.textContent = "資料索引連線不穩，正在重試第 " + attempt + " 次（" + Math.ceil(delay / 1000) + " 秒後）…";
     }).then(function (manifest) {
-      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "3ffa12bda3d5f313") throw new Error("Portal 發布版本不一致");
+      if (!manifest || manifest.schema_version !== 2 || manifest.build_id !== "1929c42e1ee60ccb") throw new Error("Portal 發布版本不一致");
       return manifest;
     });
 
@@ -568,13 +572,13 @@
       });
     }
 
-    window.__STEAM_PORTAL_BUILD_ID__ = "3ffa12bda3d5f313";
+    window.__STEAM_PORTAL_BUILD_ID__ = "1929c42e1ee60ccb";
     window.__STEAM_PORTAL_PRICE_URL__ = "data/price.json";
     window.__STEAM_PORTAL_DATA_ADAPTER__ = { loadCatalog: loadCatalog, loadDetail: loadDetail };
     loadCatalog().then(function (payload) {
       window.__STEAM_PORTAL_DATA__ = payload;
       var script = document.createElement("script");
-      script.src = "assets/steam_portal-3ffa12bda3d5f313.js";
+      script.src = "assets/steam_portal-1929c42e1ee60ccb.js";
       script.onerror = showLoadError;
       document.body.appendChild(script);
     }).catch(showLoadError);
